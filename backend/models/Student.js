@@ -1,0 +1,42 @@
+const mongoose = require("mongoose");
+
+const studentSchema = new mongoose.Schema({
+  name: String,
+
+  email: {
+    type: String,
+    unique: true,
+    required: true
+  },
+
+  password: {
+    type: String,
+    required: true
+  },
+
+  regNo: String,
+  department: String,
+  
+  resetOTP: {
+    type: String,
+    default: null
+  },
+
+  otpExpiry: {
+    type: Date,
+    default: null
+  },
+
+  role: {
+    type: String,
+    default: "student"
+  },
+
+  cgpa: {
+    type: Number,
+    default: 0
+  }
+ 
+});
+
+module.exports = mongoose.model("Student", studentSchema);
