@@ -1,6 +1,7 @@
 import StudentSidebar from "../components/StudentSidebar";
 import { useEffect, useState } from "react";
 import {FaBookOpen, FaDownload,FaEye} from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 function Subjects()
  {
@@ -9,12 +10,16 @@ const [semester, setSemester] = useState(1);
 const [subjects, setSubjects] = useState([]);
 
 useEffect(() => {
-  fetch("http://localhost:5000/student")
+  const email = localStorage.getItem("email");
+
+  fetch(`http://localhost:5000/student/${email}`)
     .then(res => res.json())
-    .then(data => setStudent(data))
+    .then(data => {
+      console.log(data);
+      setStudent(data);
+    })
     .catch(err => console.log(err));
 }, []);
-
 useEffect(() => {
   fetch(`http://localhost:5000/subjectsdetails?semester=${semester}`)
     .then(res => res.json())
@@ -81,12 +86,21 @@ body{
     display:flex;
     align-items:center;
     gap:12px;
+    text-decoration:none;
+    color:#111827;
+    cursor:pointer;
 }
 
 .subjects-profile img{
     width:50px;
     height:50px;
     border-radius:50%;
+    object-fit:cover;
+    transition:.3s;
+}
+
+.subjects-profile:hover img{
+    transform:scale(1.08);
 }
 
 .subjects-profile span{
@@ -427,14 +441,18 @@ body{
           </div>
 
           <div className="subjects-profile">
-
-            <img
-              src="images/New pic.jpeg"
-              alt="image"
-            />
-
+            <Link
+                to="/profile"
+                className="subjects-profile"
+                style={{
+                    textDecoration: "none",
+                    color: "inherit",
+                    cursor: "pointer"
+                }}
+            >
+           <img src={student?.photo ? `http://localhost:5000/${student.photo}` : "/default-profile.png"} alt="profile" onError={() => console.log("Image failed to load")}/>
             <span>{student?.name}</span>
-
+                </Link>
           </div>
 
         </div>

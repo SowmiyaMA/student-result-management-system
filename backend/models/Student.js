@@ -15,8 +15,20 @@ const studentSchema = new mongoose.Schema({
   },
 
   regNo: String,
-  department: String,
-  
+  department: {
+    type:String,
+    default:"MCA"
+  },
+
+  attendence:String,
+
+  semester: { type: String, default: 1 },
+  year: { type: String, default: "1st Year" },
+  credits:{type:String, default:36},
+
+  subjects:{type:String, default:12},
+
+  photo:String,
   resetOTP: {
     type: String,
     default: null

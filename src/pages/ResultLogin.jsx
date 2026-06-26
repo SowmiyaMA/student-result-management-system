@@ -28,38 +28,37 @@ function ResultLogin() {
     .then(res => res.json())
     .then(data => {
 
-        if(data.success){
+    if(data.success){
 
-            alert("Result Found Successfully!");
+        localStorage.setItem(
+            "student",
+            JSON.stringify(data.student)
+        );
 
-            if(location.state?.from === "dashboard"){
+        alert("Result Found Successfully!");
 
-                navigate("/student-result", {
-                    state: {
-                        semester: 2
-                    }
-                });
+        if(location.state?.from === "dashboard"){
 
-            }else{
-
-                navigate("/marksheet", {
-                    state: {
-                        semester: 1
-                    }
-                });
-
-            }
+            navigate("/student-result",{
+                state:{ semester:2 }
+            });
 
         }else{
 
-            alert("Invalid Register Number or DOB");
+            navigate("/marksheet",{
+                state:{ semester:1 }
+            });
 
         }
 
-    })
-    .catch(err => console.log(err));
+    }else{
 
-}
+        alert(data.message);
+
+    }
+
+})
+    }
     return (
         <>
         <style>

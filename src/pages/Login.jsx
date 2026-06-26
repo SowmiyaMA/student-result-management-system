@@ -1,6 +1,5 @@
 import { useState } from "react";
-
-import profile from "../assets/image.png";
+import profile from "../assets/profile.png";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 
@@ -16,15 +15,15 @@ function Login() {
 
   // STATES
   const navigate = useNavigate();
+  const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   // LOGIN FUNCTION
   function loginUser() {
 
-  if (email === "" || password === "" || role === "") {
+  if (email === "" || password === "") {
     alert("Please fill all fields!");
     return;
   }
@@ -42,13 +41,25 @@ function Login() {
     .then(res => res.json())
     .then(data => {
 
-      if (!data.success) {
-        alert("Invalid Login Credentials!");
+      console.log(data);
+      
+      if (!data.success || !data.user) {
+        alert(data.message||"Invalid Login Credentials!");
         return;
       }
+      
 
       const user = data.user;
+      
 
+        localStorage.setItem("email",data.user.email );
+        localStorage.setItem("regNo", data.user.regNo);
+        localStorage.setItem("student", JSON.stringify(user));
+
+      if (user.role !== role) {
+          alert("Selected role is incorrect");
+          return;
+      }
       if (user.role === "admin") {
 
         alert("Admin Login Successful!");
@@ -63,15 +74,11 @@ function Login() {
 
       }
 
-      else if (user.role === "student") {
+      else {
 
         alert("Student Login Successful!");
 
-        localStorage.setItem(
-          "student",
-          JSON.stringify(user)
-        );
-
+        
         navigate("/student-dashboard");
       }
 

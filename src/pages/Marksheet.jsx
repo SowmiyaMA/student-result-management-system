@@ -7,24 +7,36 @@ function Marksheet() {
 
 const [student,setStudent] = useState(null);
 const [subjects,setSubjects] = useState([]);
-
+const [result, setResult] = useState(null);
 const location = useLocation();
 const [semester, setSemester] = useState(1);
-useEffect(()=>{
+useEffect(() => {
+  const email = localStorage.getItem("email");
 
- fetch("http://localhost:5000/student")
- .then(res=>res.json())
- .then(data=>{
+  if (!email) return;
 
-    setStudent(data);
-    if (semester === 1) {
-      setSubjects(data.semester1.marks);
-    } else {
-      setSubjects(data.semester2.marks);
-    }
-    });
+  // Get student details
+  fetch(`http://localhost:5000/student/${email}`)
+    .then(res => res.json())
+    .then(studentData => {
+      setStudent(studentData);
 
-},[semester]);
+      // Get result using Register Number and Semester
+      return fetch(
+        `http://localhost:5000/result/${studentData.regNo}/${semester}`
+      );
+    })
+    .then(res => res.json())
+    .then(resultData => {
+      if (resultData ) {
+        setResult(resultData);
+        setSubjects(resultData.marks||[]);
+      } else {
+        setSubjects([]);
+      }
+    })
+    .catch(err => console.log(err));
+}, [semester]);
 
 const total =
 subjects.reduce(
@@ -36,9 +48,6 @@ const percentage =
 subjects.length > 0
 ? (total / subjects.length).toFixed(2)
 : 0;
-
-const cgpa =
-(percentage / 9.5).toFixed(2);
 
 const getGrade = (marks) => {
     if (marks >= 95) return "S";
@@ -241,7 +250,7 @@ const getGrade = (marks) => {
         </table>
 
         <div className="summary">
-          <h3>CGPA: {cgpa}</h3>
+          <h3>CGPA: {result?.cgpa}</h3>
           <h3>Percentage: {percentage}%</h3>
         </div>
 

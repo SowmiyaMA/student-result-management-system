@@ -8,13 +8,52 @@ import { useEffect, useState } from "react";
 function StudentDashboard() {
 
     const [student, setStudent] = useState(null);
+    const [results, setResults] = useState([]);
 
-    useEffect(() => {
-    fetch("http://localhost:5000/student")
-        .then((res) => res.json())
-        .then((data) => setStudent(data))
-        .catch((err) => console.log(err));
-    }, []);
+ useEffect(() => {
+    const data = localStorage.getItem("student");
+
+    console.log("Local Storage:", data);
+
+    if (!data || data === "undefined") {
+        console.log("No student data found");
+        setStudent(null);
+        return;
+    }
+
+    try {
+        const user = JSON.parse(data);
+        setStudent(user);
+
+         localStorage.setItem("regNo", user.regNo);
+    } catch (err) {
+        console.log("JSON Parse Error:", err);
+        localStorage.removeItem("student");
+        setStudent(null);
+    }
+}, []);
+
+
+useEffect(() => {
+   if (!student?.regNo) return;  
+  fetch(`http://localhost:5000/results/${student.regNo}`)
+    .then(res => res.json())
+    .then(data => 
+     { console.log("API DATA:", data);
+
+      if (Array.isArray(data)) {
+        setResults(data);
+      } else {
+        setResults([]);
+      }
+    })
+    
+    .catch(err => console.log(err));
+}, [student]);
+
+const sem1 = results.find(r => r.semester == 1);
+const sem2 = results.find(r => r.semester == 2);
+
     const [showResultLogin, setShowResultLogin] = useState(false);
 
      if(showResultLogin){
@@ -486,8 +525,7 @@ table tr:nth-child(even){
 
                     <div className="profile">
                         <Link to="/profile" className="profile">
-                        <img src="images/New pic.jpeg" alt="profile"/>
-
+                        <img src={student?.photo ? `http://localhost:5000/${student.photo}` : "/default-profile.png"} alt="profile" onError={() => console.log("Image failed to load")}/>
                         <span>
                             {student?.name}
                         </span>
@@ -545,8 +583,8 @@ table tr:nth-child(even){
                     </div> 
                     <div className="card">
                        <FaTrophy/>
-                       <h2>{student?.attendance}</h2>
-                       <p>Attendance</p>
+                       <h2>{student?.attendence??0}</h2>
+                       <p>Attendence</p>
                     </div>
                     <div className="card">
                         <FaAward/>
@@ -571,7 +609,7 @@ table tr:nth-child(even){
                     <h3>Academic Summary</h3>
                     <p><b>Total Subjects:</b> {student?.subjects}</p>
                     <p><b>Total Credits:</b> {student?.credits}</p>
-                    <p><b>Attendance:</b> {student?.attendance}</p>
+                    <p><b>Attendence:</b> {student?.attendence??0}</p>
                     <p><b>CGPA:</b> {student?.cgpa}</p>
                 </div>
 
@@ -601,8 +639,8 @@ table tr:nth-child(even){
 
                             <tr>
                                 <td>Semester 1</td>
-                                <td>8.6</td>
-                                <td>First Class</td>
+                                <td>{sem1?.cgpa||"-"}</td>
+    <td>{sem1?.cgpa >= 8.9 ? "First Class with distinction" : "First Class"}</td>
                                 <td>
                                     <span className="pass">
                                         Pass
@@ -612,8 +650,9 @@ table tr:nth-child(even){
 
                             <tr>
                                 <td>Semester 2</td>
-                                <td>8.9</td>
-                                <td>First Class with Distinction</td>
+                                    <td>{sem2?.cgpa||"-"}</td>
+    <td>{sem2?.cgpa >= 8.9 ? "First Class with distinction" : "First Class"}</td>
+                           
                                 <td>
                                     <span className="pass">
                                         Pass

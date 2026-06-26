@@ -4,6 +4,7 @@ import {
     FaEnvelope,
     FaIdCard,
     FaBuilding,
+    FaCalendarAlt,
     FaLock
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,7 @@ function Register() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [roll, setRoll] = useState("");
+    const [dob, setDob] = useState("");
     const [department, setDepartment] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,6 +35,7 @@ function Register() {
             email === "" ||
             roll === "" ||
             department === "" ||
+            dob === "" ||
             password === "" ||
             confirmPassword === ""
         ) {
@@ -80,7 +83,8 @@ function Register() {
             email,
             password,
             regNo: roll,        // IMPORTANT FIX (backend expects regNo)
-            department
+            department,
+            dob
         })
     })
     .then(res => res.json())
@@ -331,6 +335,19 @@ function Register() {
                         onChange={(e) =>
                             setRoll(e.target.value)
                         }
+                    />
+
+                </div>
+                {/* DATE OF BIRTH */}
+
+                <div className="input-box">
+
+                    <FaCalendarAlt className="input-icon" />
+
+                    <input
+                        type="date"
+                        value={dob}
+                        onChange={(e) => setDob(e.target.value)}
                     />
 
                 </div>

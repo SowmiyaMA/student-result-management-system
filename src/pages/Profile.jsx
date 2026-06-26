@@ -10,13 +10,24 @@ function Profile() {
 
     const [student, setStudent] = useState(null);
 
-    useEffect(() => {
-        fetch("http://localhost:5000/student")
-        .then(res => res.json())
-        .then(data => setStudent(data))
-        .catch(err => console.log(err));
-    }, []);
+  useEffect(() => {
 
+    const email = localStorage.getItem("email");
+
+    if (!email) {
+        console.log("Email not found");
+        return;
+    }
+
+    fetch(`http://localhost:5000/student/${email}`)
+        .then(res => res.json())
+        .then(data => {
+            console.log(data);
+            setStudent(data);
+        })
+        .catch(err => console.log(err));
+
+}, []);
     if (!student) {
     return (
         <div style={{padding:"30px"}}>
@@ -159,10 +170,8 @@ function Profile() {
 
             <div className="profile-card">
 
-                <img
-                    src="images/New pic.jpeg"
-                    alt="profile"
-                />
+                 <img src={student?.photo ? `http://localhost:5000/${student.photo}` : "/default-profile.png"} alt="profile" onError={() => console.log("Image failed to load")}/>
+                      
 
                <h2>{student?.name}</h2>
 

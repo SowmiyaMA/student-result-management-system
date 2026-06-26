@@ -29,8 +29,8 @@ function Performance() {
   };
 
 const [student, setStudent] = useState(null);
-const [sem1Marks, setSem1Marks] = useState([]);
-const [sem2Marks, setSem2Marks] = useState([]);
+const [result, setResult] = useState(null);
+const [subjects, setSubjects] = useState([]);
 const [attendance, setAttendance] = useState(0);
 const [assignment, setAssignment] = useState(0);
 const [pass, setPass] = useState(0);
@@ -38,51 +38,52 @@ const [cgpa, setCgpa] = useState(0);
 const [performance, setPerformance] = useState(null);
 
 useEffect(() => {
-  fetch("http://localhost:5000/student")
-    .then(res => res.json())
-    .then(data => {
-      setStudent(data);
-      setSem1Marks(data.semester1.marks);
-      setSem2Marks(data.semester2.marks);
-    });
+
+    const data = JSON.parse(localStorage.getItem("student"));
+
+    setStudent(data);
+
 }, []);
 
 useEffect(() => {
 
-  fetch(`http://localhost:5000/performance?semester=${selectedSemester}`)
-    .then(res => res.json())
-    .then(data => {
-      console.log("Performance:", data);
-      console.log("Marks:", data);
-      setPass(data.pass);
-      setAttendance(data.attendance);
-      setAssignment(data.assignment);
-      setCgpa(data.cgpa);
+    const student = JSON.parse(localStorage.getItem("student"));
 
-    })
-    .catch(err => console.log(err));
+    const regNo = student?.regNo;
+
+    fetch(`http://localhost:5000/performance/${regNo}/${selectedSemester}`)
+      .then(res => res.json())
+      .then(data => {
+
+          setResult(data);
+
+          setSubjects(data.marks||[]);
+
+          setAttendance(data.attendance||0);
+
+          setAssignment(data.assignment||0);
+
+          setPass(data.pass||0);
+
+          setCgpa(data.cgpa||0);
+
+      })
+      .catch(err => console.log(err));
+
 }, [selectedSemester]);
 
-const currentMarks =selectedSemester === 1? sem1Marks: sem2Marks;
-const percentage =currentMarks.length > 0? (currentMarks.reduce((sum,item)=>sum+item.mark,0) / currentMarks.length).toFixed(1): 0;
+const currentMarks = subjects;
+const percentage =
+subjects.length > 0
+?
+(
+subjects.reduce((sum,item)=>sum+item.mark,0)
+/ subjects.length
+).toFixed(1)
+:
+0;
 
-const sem1Percentage =
-sem1Marks.length > 0
-? (
-    sem1Marks.reduce(
-      (sum,item)=>sum+item.mark,0
-    ) / sem1Marks.length
-  ).toFixed(1)
-: 0;
 
-const sem2Percentage =
-sem2Marks.length > 0
-? (
-    sem2Marks.reduce(
-      (sum,item)=>sum+item.mark,0
-    ) / sem2Marks.length
-  ).toFixed(1)
-: 0;
 const barData = {
 
  labels:currentMarks.map(
@@ -496,20 +497,20 @@ const barData = {
         <div className="stats-container">
           {selectedSemester === 1 && (
           <div className="stat-card">
-            <h3>Semester 1 Percentage</h3>
-            <h1>{sem1Percentage}%</h1>
+            <h3>Semester {selectedSemester} Percentage</h3>
+            <h1>{percentage}%</h1>
           </div>
           )}
           {selectedSemester === 2 && (
     <>
           <div className="stat-card2">
-            <h3>Sem 2 Percentage</h3>
-            <h1>{sem2Percentage}%</h1>
+            <h3>Semester {selectedSemester} Percentage</h3>
+            <h1>{percentage}%</h1>
           </div>
 
           <div className="stat-card2">
             <h3>Overall CGPA</h3>
-            <h1>{student?.cgpa}</h1>
+            <h1>{cgpa}</h1>
           </div>
        </>    )}
         </div>

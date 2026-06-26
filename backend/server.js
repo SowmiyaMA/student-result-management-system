@@ -3,6 +3,12 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
+const bcrypt = require("bcryptjs");
+const path = require("path");
+
+const Student = require("./models/Student");
+const Result = require("./models/Result");
+
 
 const app = express();
 
@@ -22,54 +28,59 @@ const users = [
     password: "faculty123",
     role: "faculty"
   },
-  {
-    email: "sowmiyama2005@gmail.com",
-    password: "6209",
-    role: "student",
-    name: "Sowmiya M.A",
-    cgpa: "8.9"
-  }
 ];
 
 app.get("/", (req, res) => {
     res.send("Backend Running");
 });
 
-app.get("/student", (req, res) => {
-  res.json({
-    name:"Sowmiya M.A",
-      regNo:"810025622037",
-      email:"sowmiyama2005@gmail.com",
-      semester:"2",
-      year:1,
-      department:"MCA",
-      subjects:12,
-      cgpa:"8.90",
-      credits:"36",
-      attendance:"95%",
-      semester1:{
-      marks:[
-        {subject:"NP",mark:73},
-        {subject:"SE",mark:84},
-        {subject:"DSAP",mark:82},
-        {subject:"AJP",mark:80},
-        {subject:"DEV",mark:86},
-        {subject:"MFCA",mark:85}
-      ]
-    },
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
 
-    semester2:{
-      marks:[
-        {subject:"UIUX",mark:77},
-        {subject:"QC",mark:84},
-        {subject:"FDS",mark:83},
-        {subject:"FSWD",mark:92},
-        {subject:"MAD",mark:84},
-        {subject:"NPM",mark:89}
-      ]
+app.get("/student/:email", async (req,res)=>{
 
+   try{
+
+      const student = await Student.findOne({
+         email: req.params.email
+      }).select("-password");
+
+     if (!student) {
+      return res.status(404).json({ message: "Student not found" });
     }
-  });
+
+    res.json(student);
+  } catch (err) {
+    res.status(500).json({ success:false,
+      error: err.message });
+         
+      };
+    });
+   
+
+app.get("/result/:regNo/:semester", async (req, res) => {
+
+  try {
+
+    const result = await Result.findOne({
+      regNo: req.params.regNo,
+      semester: req.params.semester
+    });
+
+    res.json(result);
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      success: false
+    });
+
+  }
+
 });
 
 app.get("/subjectsdetails", (req, res) => {
@@ -170,77 +181,120 @@ app.get("/subjectsdetails", (req, res) => {
 };
 });
 
-app.get("/performance", (req,res)=>{
+app.get("/performance/:regNo/:semester", async (req, res) => {
+  try {
 
-  const semester = req.query.semester;
-
-  if(semester=="1"){
-    res.json({
-      attendance:90,
-      assignment:85,
-      pass:95,
-      cgpa:8.4
+    const result = await Result.findOne({
+      regNo: req.params.regNo,
+      semester: req.params.semester
     });
-  }
 
-  else{
-     res.json({
-      attendance:94,
-      assignment:90,
-      pass:98,
-      cgpa:8.9
-    });
-  }
-
-});
-app.post("/check-result", (req, res) => {
-
-    const { regNo, dob } = req.body;
-
-    if (
-        regNo === "810025622037" &&
-        dob === "2005-02-02"
-    ) {
-        res.json({
-            success: true
-        });
-    } else {
-        res.json({
-            success: false
-        });
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Result not found"
+      });
     }
+
+    res.json(result);
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false
+    });
+  }
+});
+app.get("/result/:regNo/:semester", async (req, res) => {
+  try {
+    const result = await Result.find({
+      regNo:req.params.regNo
+    });
+
+    if (!result) {
+      return res.status(404).json({ message: "Result not found" });
+    }
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post("/check-result", async (req, res) => {
+
+    try {
+
+        const { regNo, dob } = req.body;
+
+        const student = await Student.findOne({
+            regNo,
+            dob
+        });
+
+        if (!student) {
+            return res.json({
+                success: false,
+                message: "Invalid Register Number or Date of Birth"
+            });
+        }
+
+        res.json({
+            success: true,
+            student
+        });
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json({
+            success: false,
+            message: "Server Error"
+        });
+
+    }
+
 });
 
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+     console.log("LOGIN REQUEST:", email);
 
-    const user = await Student.findOne({ email });
+    const student = await Student.findOne({ email });
 
-    if (!user) {
-      return res.json({ success: false, message: "User not found" });
+    if (!student) {
+      return res.json({
+        success: false,
+        message: "User not found"
+      });
     }
+     console.log("INPUT PASSWORD:", password);
+    console.log("DB PASSWORD:", student.password);
 
-    const isMatch = await bcrypt.compare(password, user.password);
+
+    const isMatch = await bcrypt.compare(password.trim(), student.password);
 
     if (!isMatch) {
-      return res.json({ success: false, message: "Invalid password" });
+      return res.json({
+        success: false,
+        message: "Invalid password"
+      });
     }
 
-    res.json({
+    return res.json({
       success: true,
-      message: "Login successful",
-      user
+      user:student
     });
 
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ success: false });
+    console.log("LOGIN ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 });
-
-const Student = require("./models/Student");
-const bcrypt = require("bcryptjs");
 
 app.post("/register", async (req, res) => {
   try {
@@ -255,14 +309,16 @@ app.post("/register", async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
     const newStudent = new Student({
       name,
       email,
       password: hashedPassword,
       regNo,
-      department
+      department,
+      dob,
+      role:"student"
     });
 
     await newStudent.save();

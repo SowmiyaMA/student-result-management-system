@@ -12,7 +12,7 @@ const location = useLocation();
 const [semester, setSemester] = useState(location.state?.semester || 2);
 useEffect(() => {
 
-  fetch("http://localhost:5000/student")
+  fetch("http://localhost:5000/result/${student.regNo/1")
     .then(res => res.json())
     .then(data => {
 
