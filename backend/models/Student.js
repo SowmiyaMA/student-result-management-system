@@ -43,6 +43,10 @@ const studentSchema = new mongoose.Schema({
     type: String,
     default: "student"
   },
+  dob:{
+    type:Date,
+    required:true
+  },
 
   cgpa: {
     type: Number,

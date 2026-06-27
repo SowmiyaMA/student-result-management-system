@@ -11,37 +11,35 @@ const [result, setResult] = useState(null);
 const location = useLocation();
 const [semester, setSemester] = useState(1);
 useEffect(() => {
-  const email = localStorage.getItem("email");
+  const storedStudent = JSON.parse(localStorage.getItem("student"));
 
-  if (!email) return;
+  if (!storedStudent) return;
 
-  // Get student details
-  fetch(`http://localhost:5000/student/${email}`)
+  setStudent(storedStudent);
+
+  fetch(`http://localhost:5000/result/${storedStudent.regNo}/${semester}`)
     .then(res => res.json())
-    .then(studentData => {
-      setStudent(studentData);
+    .then(data => {
+      console.log("API DATA:", data);
 
-      // Get result using Register Number and Semester
-      return fetch(
-        `http://localhost:5000/result/${studentData.regNo}/${semester}`
-      );
-    })
-    .then(res => res.json())
-    .then(resultData => {
-      if (resultData ) {
-        setResult(resultData);
-        setSubjects(resultData.marks||[]);
-      } else {
+      // ❌ if backend returns null
+      if (!data || !data.marks) {
         setSubjects([]);
+        setResult(null);
+        return;
       }
+
+      // ✅ FIX: correct mapping
+      setResult(data);
+      setSubjects(data.marks || []);
     })
-    .catch(err => console.log(err));
+    .catch(err => console.log("FETCH ERROR:", err));
+
 }, [semester]);
 
-const total =
-subjects.reduce(
-(sum,item)=>sum+item.mark,
-0
+const total = subjects.reduce(
+  (sum, item) => sum + (item.mark || item.score || 0),
+  0
 );
 
 const percentage =
@@ -237,15 +235,15 @@ const getGrade = (marks) => {
 
           <tbody>
             {subjects.map((subject, index) => (
-              <tr key={index}>
-                <td>{subject.subject}</td>
-                <td>{subject.mark}</td>
-                <td>{getGrade(subject.mark)}</td>
-                <td className="pass">
-                  {subject.mark >= 40 ? "PASS" : "FAIL"}
-                </td>
-              </tr>
-            ))}
+  <tr key={index}>
+    <td>{subject.subject || subject.name || subject.title}</td>
+    <td>{subject.mark ??subject.score??0}</td>
+    <td>{getGrade(subject.mark || subject.score)}</td>
+    <td className="pass">
+      {(subject.mark || subject.score) >= 40 ? "PASS" : "FAIL"}
+    </td>
+  </tr>
+))}
           </tbody>
         </table>
 

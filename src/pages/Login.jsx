@@ -52,8 +52,8 @@ function Login() {
       const user = data.user;
       
 
-        localStorage.setItem("email",data.user.email );
-        localStorage.setItem("regNo", data.user.regNo);
+        localStorage.setItem("email",user.email );
+        localStorage.setItem("regNo", user.regNo);
         localStorage.setItem("student", JSON.stringify(user));
 
       if (user.role !== role) {

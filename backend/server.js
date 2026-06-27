@@ -186,7 +186,7 @@ app.get("/performance/:regNo/:semester", async (req, res) => {
 
     const result = await Result.findOne({
       regNo: req.params.regNo,
-      semester: req.params.semester
+      semester: Number(req.params.semester)
     });
 
     if (!result) {
@@ -207,55 +207,103 @@ app.get("/performance/:regNo/:semester", async (req, res) => {
 });
 app.get("/result/:regNo/:semester", async (req, res) => {
   try {
-    const result = await Result.find({
-      regNo:req.params.regNo
+    const result = await Result.findOne({
+      regNo: req.params.regNo,
+      semester: Number(req.params.semester)
     });
 
     if (!result) {
-      return res.status(404).json({ message: "Result not found" });
+      return res.json({
+        success: false,
+        message: "Result not found"
+      });
     }
 
-    res.json(result);
+    return res.json({
+      success: true,
+      result
+    });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 });
 app.post("/check-result", async (req, res) => {
+  try {
+    const { regNo, dob } = req.body;
 
-    try {
-
-        const { regNo, dob } = req.body;
-
-        const student = await Student.findOne({
-            regNo,
-            dob
-        });
-
-        if (!student) {
-            return res.json({
-                success: false,
-                message: "Invalid Register Number or Date of Birth"
-            });
-        }
-
-        res.json({
-            success: true,
-            student
-        });
-
-    } catch (err) {
-
-        console.log(err);
-
-        res.status(500).json({
-            success: false,
-            message: "Server Error"
-        });
-
+    if (!regNo || !dob) {
+      return res.json({
+        success: false,
+        message: "Register number and DOB required"
+      });
     }
 
-});
+    // ✅ STUDENT COLLECTION ONLY
+    const student = await Student.findOne({
+      regNo: regNo.trim()
+    });
 
+    if (!student) {
+      return res.json({
+        success: false,
+        message: "Invalid Register Number"
+      });
+    }
+
+    // ✅ DOB CHECK FROM STUDENT
+    const dbDob = new Date(student.dob).toISOString().split("T")[0];
+
+    if (dbDob !== dob) {
+      return res.json({
+        success: false,
+        message: "Invalid DOB"
+      });
+    }
+
+    return res.json({
+      success: true,
+      student
+    });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
+app.get("/results/:regNo", async (req, res) => {
+  try {
+    const results = await Result.find({
+      regNo: req.params.regNo
+    });
+
+    if (!results || results.length === 0) {
+      return res.json({
+        success: true,
+        results: []
+      });
+    }
+
+    return res.json({
+      success: true,
+      results
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -298,7 +346,7 @@ app.post("/login", async (req, res) => {
 
 app.post("/register", async (req, res) => {
   try {
-    const { name, email, password, regNo, department } = req.body;
+    const { name, email, password, regNo, department,dob } = req.body;
 
     const userExists = await Student.findOne({ email });
 

@@ -13,52 +13,53 @@ function ResultLogin() {
     const [dob, setDob] = useState("");
 
     // CHECK RESULT FUNCTION
-    function checkResult() {
-
-    fetch("http://localhost:5000/check-result", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            regNo: regno,
-            dob: dob
-        })
+function checkResult() {
+  fetch("http://localhost:5000/check-result", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      regNo: regno,
+      dob: dob
     })
+  })
     .then(res => res.json())
     .then(data => {
 
-    if(data.success){
+      if (!data.success) {
+        alert(data.message || "Invalid details");
+        return;
+      }
 
-        localStorage.setItem(
-            "student",
-            JSON.stringify(data.student)
-        );
+      if (!data.student) {
+        alert("Student not found");
+        return;
+      }
 
-        alert("Result Found Successfully!");
+      localStorage.setItem(
+        "student",
+        JSON.stringify(data.student)
+      );
 
-        if(location.state?.from === "dashboard"){
+      alert("Result Found Successfully!");
 
-            navigate("/student-result",{
-                state:{ semester:2 }
-            });
+      if (location.state?.from === "dashboard") {
+        navigate("/student-result", {
+          state: { semester: 2 }
+        });
+      } else {
+        navigate("/marksheet", {
+          state: { semester: 1 }
+        });
+      }
 
-        }else{
-
-            navigate("/marksheet",{
-                state:{ semester:1 }
-            });
-
-        }
-
-    }else{
-
-        alert(data.message);
-
-    }
-
-})
-    }
+    })
+    .catch(err => {
+      console.log(err);
+      alert("Server error");
+    });
+}
     return (
         <>
         <style>

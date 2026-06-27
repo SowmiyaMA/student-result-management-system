@@ -35,22 +35,22 @@ function StudentDashboard() {
 
 
 useEffect(() => {
-   if (!student?.regNo) return;  
+  if (!student?.regNo) return;
+
   fetch(`http://localhost:5000/results/${student.regNo}`)
     .then(res => res.json())
-    .then(data => 
-     { console.log("API DATA:", data);
+    .then(data => {
+      console.log("API DATA:", data);
 
-      if (Array.isArray(data)) {
-        setResults(data);
+      if (data.success) {
+        setResults(data.results);   // ✅ IMPORTANT FIX
       } else {
         setResults([]);
       }
     })
-    
     .catch(err => console.log(err));
-}, [student]);
 
+}, [student]);
 const sem1 = results.find(r => r.semester == 1);
 const sem2 = results.find(r => r.semester == 2);
 

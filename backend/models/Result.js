@@ -12,10 +12,6 @@ const resultSchema = new mongoose.Schema({
       mark: Number
     }
   ],
-  dob:{
-    type:Date,
-    required:true
-  },
   attendance: Number,
 
   assignment: Number,
